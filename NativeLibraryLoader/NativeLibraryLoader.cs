@@ -79,9 +79,7 @@ namespace NativeLibraryNetStandard
         {
             if (Path.IsPathRooted(name))
             {
-                name = @"D:\development\llama\native\LLamaSharp\NetStandardTest\bin\Debug\runtimes\win-x64\native\cuda11\llama.dll";
                 var res =  CoreLoadNativeLibrary(name);
-                var error = Marshal.GetLastWin32Error();
                 return res;
             }
             else
@@ -204,7 +202,8 @@ namespace NativeLibraryNetStandard
 
             protected override IntPtr CoreLoadNativeLibrary(string name)
             {
-                return Libdl.dlopen(name, Libdl.RTLD_NOW);
+                var res = Libdl.dlopen(name, Libdl.RTLD_NOW);
+                return res;
             }
         }
     }

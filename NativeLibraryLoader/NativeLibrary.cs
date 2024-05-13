@@ -23,11 +23,17 @@ namespace NativeLibraryNetStandard
         /// <returns>Whether the native library is loaded successfully.</returns>
         public static bool TryLoad(string filename, out IntPtr handle, bool freeResult = false)
         {
-            var library = new NativeLibraryHolder(filename, autoFree:freeResult);
-            handle = library.Handle;
-            var error = Marshal.GetLastWin32Error();
-            //library.Dispose();
-            return library.Handle != IntPtr.Zero;
+            try
+            {
+                var library = new NativeLibraryHolder(filename, autoFree:freeResult);
+                handle = library.Handle;
+                return library.Handle != IntPtr.Zero;
+            }
+            catch
+            {
+                handle = IntPtr.Zero;
+                return false;
+            }
         }
 
         /// <summary>

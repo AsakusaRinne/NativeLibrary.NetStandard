@@ -156,7 +156,7 @@ namespace NativeLibraryNetStandard
         /// </summary>
         public void Dispose()
         {
-            if (_autoFree)
+            if (_autoFree && Handle != IntPtr.Zero)
             {
                 _loader.FreeNativeLibraryHandle(Handle);
             }
