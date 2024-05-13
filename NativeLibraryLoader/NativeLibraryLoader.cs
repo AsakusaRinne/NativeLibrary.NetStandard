@@ -2,12 +2,12 @@
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace NativeLibraryLoader
+namespace NativeLibraryNetStandard
 {
     /// <summary>
     /// Exposes functionality for loading native libraries and function pointers.
     /// </summary>
-    public abstract class LibraryLoader
+    public abstract class NativeLibraryLoader
     {
         /// <summary>
         /// Loads a native library by name and returns an operating system handle to it.
@@ -16,7 +16,7 @@ namespace NativeLibraryLoader
         /// <returns>The operating system handle for the shared library.</returns>
         public IntPtr LoadNativeLibrary(string name)
         {
-            return LoadNativeLibrary(name, PathResolver.Default);
+            return LoadNativeLibrary(name, new EmptyPathResolver());
         }
 
         /// <summary>
@@ -27,7 +27,7 @@ namespace NativeLibraryLoader
         /// <returns>The operating system handle for the shared library.</returns>
         public IntPtr LoadNativeLibrary(string[] names)
         {
-            return LoadNativeLibrary(names, PathResolver.Default);
+            return LoadNativeLibrary(names, new EmptyPathResolver());
         }
 
         /// <summary>
@@ -36,19 +36,14 @@ namespace NativeLibraryLoader
         /// <param name="name">The name of the library to open.</param>
         /// <param name="pathResolver">The path resolver to use.</param>
         /// <returns>The operating system handle for the shared library.</returns>
-        public IntPtr LoadNativeLibrary(string name, PathResolver pathResolver)
+        public IntPtr LoadNativeLibrary(string name, IPathResolver pathResolver)
         {
             if (string.IsNullOrEmpty(name))
             {
-                throw new ArgumentException("Parameter must not be null or empty.", nameof(name));
+                return IntPtr.Zero;
             }
 
             IntPtr ret = LoadWithResolver(name, pathResolver);
-
-            if (ret == IntPtr.Zero)
-            {
-                throw new FileNotFoundException("Could not find or load the native library: " + name);
-            }
 
             return ret;
         }
@@ -60,11 +55,11 @@ namespace NativeLibraryLoader
         /// </param>
         /// <param name="pathResolver">The path resolver to use.</param>
         /// <returns>The operating system handle for the shared library.</returns>
-        public IntPtr LoadNativeLibrary(string[] names, PathResolver pathResolver)
+        public IntPtr LoadNativeLibrary(string[] names, IPathResolver pathResolver)
         {
-            if (names == null || names.Length == 0)
+            if (names is null || names.Length == 0)
             {
-                throw new ArgumentException("Parameter must not be null or empty.", nameof(names));
+                return IntPtr.Zero;
             }
 
             IntPtr ret = IntPtr.Zero;
@@ -73,23 +68,21 @@ namespace NativeLibraryLoader
                 ret = LoadWithResolver(name, pathResolver);
                 if (ret != IntPtr.Zero)
                 {
-                    break;
+                    return ret;
                 }
             }
 
-            if (ret == IntPtr.Zero)
-            {
-                throw new FileNotFoundException($"Could not find or load the native library from any name: [ {string.Join(", ", names)} ]");
-            }
-
-            return ret;
+            return IntPtr.Zero;
         }
 
-        private IntPtr LoadWithResolver(string name, PathResolver pathResolver)
+        private IntPtr LoadWithResolver(string name, IPathResolver pathResolver)
         {
             if (Path.IsPathRooted(name))
             {
-                return CoreLoadNativeLibrary(name);
+                name = @"D:\development\llama\native\LLamaSharp\NetStandardTest\bin\Debug\runtimes\win-x64\native\cuda11\llama.dll";
+                var res =  CoreLoadNativeLibrary(name);
+                var error = Marshal.GetLastWin32Error();
+                return res;
             }
             else
             {
@@ -129,7 +122,7 @@ namespace NativeLibraryLoader
         /// Frees the library represented by the given operating system handle.
         /// </summary>
         /// <param name="handle">The handle of the open shared library.</param>
-        public void FreeNativeLibrary(IntPtr handle)
+        public void FreeNativeLibraryHandle(IntPtr handle)
         {
             if (handle == IntPtr.Zero)
             {
@@ -165,21 +158,21 @@ namespace NativeLibraryLoader
         /// Returns a default library loader for the running operating system.
         /// </summary>
         /// <returns>A LibraryLoader suitable for loading libraries.</returns>
-        public static LibraryLoader GetPlatformDefaultLoader()
+        public static NativeLibraryLoader GetPlatformDefaultLoader()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                return new Win32LibraryLoader();
+                return new WindowsNativeLibraryLoader();
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                return new UnixLibraryLoader();
+                return new UnixNativeLibraryLoader();
             }
 
             throw new PlatformNotSupportedException("This platform cannot load native libraries.");
         }
 
-        private class Win32LibraryLoader : LibraryLoader
+        private class WindowsNativeLibraryLoader : NativeLibraryLoader
         {
             protected override void CoreFreeNativeLibrary(IntPtr handle)
             {
@@ -197,7 +190,7 @@ namespace NativeLibraryLoader
             }
         }
 
-        private class UnixLibraryLoader : LibraryLoader
+        private class UnixNativeLibraryLoader : NativeLibraryLoader
         {
             protected override void CoreFreeNativeLibrary(IntPtr handle)
             {

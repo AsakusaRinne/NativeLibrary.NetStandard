@@ -1,14 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <PackageVersion>1.0.13</PackageVersion>
+    <PackageVersion>0.1.0</PackageVersion>
     <AssemblyVersion>$(PackageVersion)</AssemblyVersion>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>9</LangVersion>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Authors>Eric Mellino</Authors>
+    <Authors>Rinne, Eric Mellino</Authors>
+    <Title>A library to manage native library under .NET standard 2.0.</Title>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Description>Contains the NativeLibrary type, useful for loading native shared libraries and retrieving function pointers.</Description>
-    <PackageProjectUrl>https://github.com/mellinoe/nativelibraryloader</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/mellinoe/nativelibraryloader</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/AsakusaRinne/NativeLibrary.NetStandard</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/AsakusaRinne/NativeLibrary.NetStandard</RepositoryUrl>
     <DocumentationFile>bin/NativeLibraryLoader.xml</DocumentationFile>
+    <PackageOutputPath>packages</PackageOutputPath>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.0.3" />

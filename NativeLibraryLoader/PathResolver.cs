@@ -5,24 +5,31 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace NativeLibraryLoader
+namespace NativeLibraryNetStandard
 {
     /// <summary>
     /// Enumerates possible library load targets.
     /// </summary>
-    public abstract class PathResolver
+    public interface IPathResolver
     {
         /// <summary>
         /// Returns an enumerator which yields possible library load targets, in priority order.
         /// </summary>
         /// <param name="name">The name of the library to load.</param>
         /// <returns>An enumerator yielding load targets.</returns>
-        public abstract IEnumerable<string> EnumeratePossibleLibraryLoadTargets(string name);
+        IEnumerable<string> EnumeratePossibleLibraryLoadTargets(string name);
+    }
 
-        /// <summary>
-        /// Gets a default path resolver.
-        /// </summary>
-        public static PathResolver Default { get; } = new DefaultPathResolver();
+    /// <summary>
+    /// Do nothing, only return the input name unchanged.
+    /// </summary>
+    public class EmptyPathResolver : IPathResolver
+    {
+        /// <inheritdoc/>
+        public IEnumerable<string> EnumeratePossibleLibraryLoadTargets(string name)
+        {
+            yield return name;
+        }
     }
 
     /// <summary>
@@ -31,14 +38,14 @@ namespace NativeLibraryLoader
     /// Second: The simple name, unchanged.
     /// Third: The library as resolved via the default DependencyContext, in the default nuget package cache folder.
     /// </summary>
-    public class DefaultPathResolver : PathResolver
+    public class DefaultNetAppPathResolver : IPathResolver
     {
         /// <summary>
         /// Returns an enumerator which yields possible library load targets, in priority order.
         /// </summary>
         /// <param name="name">The name of the library to load.</param>
         /// <returns>An enumerator yielding load targets.</returns>
-        public override IEnumerable<string> EnumeratePossibleLibraryLoadTargets(string name)
+        public IEnumerable<string> EnumeratePossibleLibraryLoadTargets(string name)
         {
             if (!string.IsNullOrEmpty(AppContext.BaseDirectory))
             {
